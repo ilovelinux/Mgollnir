@@ -44,3 +44,7 @@ func (botCommand) Reverse(args string) string {
 	}
 	return string(runes)
 }
+
+func (botCommand) Source(args string) string {
+	return "https://github.com/ilovelinux/Mgollnir"
+}
