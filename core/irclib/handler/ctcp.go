@@ -62,7 +62,7 @@ func (ctcp) PING(params string) string {
 }
 
 func (ctcp) SOURCE(params string) string {
-	return "This is a secret..."
+	return "https://github.com/ilovelinux/Mgollnir"
 }
 
 func (ctcp) TIME(params string) string {
