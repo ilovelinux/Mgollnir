@@ -53,8 +53,8 @@ func (d *Driver) Connect() {
 		d.done = make(chan bool)
 		go send(d)
 		go recv(d)
-		d.Sendq <- commands.User(d.identity)
 		d.Sendq <- commands.Nick(d.identity)
+		d.Sendq <- commands.User(d.identity)
 		for _, channel := range d.server.Channels {
 			d.Sendq <- commands.Join(channel)
 		}
