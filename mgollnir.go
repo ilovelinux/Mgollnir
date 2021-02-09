@@ -34,6 +34,6 @@ func main() {
 		line := <-d.Recvq
 		fmt.Println(line)
 		ircmsg := irclib.Parser(line)
-		handler.Handle(d.Sendq, ircmsg)
+		handler.Handle(*d, ircmsg)
 	}
 }

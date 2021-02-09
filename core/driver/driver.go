@@ -17,8 +17,8 @@ import (
 )
 
 type Driver struct {
-	server   core.Server
-	identity core.Identity
+	Server   core.Server
+	Identity core.Identity
 
 	conn  *net.Conn
 	Sendq chan string
@@ -28,8 +28,8 @@ type Driver struct {
 
 func New(server core.Server, identity core.Identity) *Driver {
 	var d = &Driver{}
-	d.server = server
-	d.identity = identity
+	d.Server = server
+	d.Identity = identity
 	return d
 }
 
@@ -37,10 +37,10 @@ func (d *Driver) Connect() {
 	for d.conn == nil {
 		var conn net.Conn
 		var err error
-		if d.server.SSL {
-			conn, err = tls.Dial("tcp", d.server.String(), nil)
+		if d.Server.SSL {
+			conn, err = tls.Dial("tcp", d.Server.String(), nil)
 		} else {
-			conn, err = net.Dial("tcp", d.server.String())
+			conn, err = net.Dial("tcp", d.Server.String())
 		}
 		if err != nil {
 			log.Println(err)
@@ -53,11 +53,8 @@ func (d *Driver) Connect() {
 		d.done = make(chan bool)
 		go send(d)
 		go recv(d)
-		d.Sendq <- commands.Nick(d.identity)
-		d.Sendq <- commands.User(d.identity)
-		for _, channel := range d.server.Channels {
-			d.Sendq <- commands.Join(channel)
-		}
+		d.Sendq <- commands.Nick(d.Identity)
+		d.Sendq <- commands.User(d.Identity)
 
 		// Handle Ctrl+C
 		c := make(chan os.Signal)
