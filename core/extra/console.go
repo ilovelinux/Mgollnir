@@ -19,7 +19,7 @@ func ConsoleReader(sendq chan string) {
 		case '#':
 			channel = text
 		case '/':
-			sendq <- text
+			sendq <- strings.TrimPrefix(text, "/")
 		default:
 			sendq <- commands.Privmsg(channel, text)
 		}
