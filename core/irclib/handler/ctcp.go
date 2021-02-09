@@ -13,16 +13,16 @@ import (
 
 type ctcp struct{}
 
-func handleCtcp(sendq chan string, ircmsg core.IRCMsg) {
+func handleCtcp(bot core.Bot, ircmsg core.IRCMsg) {
 	command, params := irclib.GetCommand(ircmsg.Parameters)
 
 	response, err := runCTCPCommand(command, params)
 	if err == nil {
 		for _, line := range strings.Split(*response, "\n") {
-			sendq <- commands.Notice(
+			bot.Server.Send(commands.Notice(
 				ircmsg.User.Nickname,
 				fmt.Sprintf("\x01%s %s\x01", command, line),
-			)
+			))
 		}
 	}
 }

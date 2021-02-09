@@ -7,7 +7,7 @@ import (
 	"../../../plugins"
 )
 
-func handlePrivmsg(sendq chan string, ircmsg core.IRCMsg) {
+func handlePrivmsg(bot core.Bot, ircmsg core.IRCMsg) {
 	channel, text := func() (string, string) {
 		x := strings.SplitN(ircmsg.Parameters, " ", 2)
 		return x[0], x[1][1:]
@@ -19,5 +19,5 @@ func handlePrivmsg(sendq chan string, ircmsg core.IRCMsg) {
 		Text:    text,
 	}
 
-	plugins.Dispatch(sendq, privmsg)
+	plugins.Dispatch(bot, privmsg)
 }

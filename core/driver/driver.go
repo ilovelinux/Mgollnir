@@ -6,19 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
-
-	"../../core"
-
-	"../irclib/commands"
 )
 
 type Driver struct {
-	Server   core.Server
-	Identity core.Identity
+	addr string
+	port int
+	ssl  bool
 
 	conn  *net.Conn
 	Sendq chan string
@@ -26,21 +20,24 @@ type Driver struct {
 	done  chan bool
 }
 
-func New(server core.Server, identity core.Identity) *Driver {
-	var d = &Driver{}
-	d.Server = server
-	d.Identity = identity
-	return d
+func New(addr string, port int, ssl bool) Driver {
+	d := &Driver{}
+	d.addr = addr
+	d.port = port
+	d.ssl = ssl
+
+	return *d
 }
 
 func (d *Driver) Connect() {
 	for d.conn == nil {
 		var conn net.Conn
 		var err error
-		if d.Server.SSL {
-			conn, err = tls.Dial("tcp", d.Server.String(), nil)
+		addr := fmt.Sprintf("%s:%d", d.addr, d.port)
+		if d.ssl {
+			conn, err = tls.Dial("tcp", addr, nil)
 		} else {
-			conn, err = net.Dial("tcp", d.Server.String())
+			conn, err = net.Dial("tcp", addr)
 		}
 		if err != nil {
 			log.Println(err)
@@ -53,31 +50,17 @@ func (d *Driver) Connect() {
 		d.done = make(chan bool)
 		go send(d)
 		go recv(d)
-		d.Sendq <- commands.Nick(d.Identity)
-		d.Sendq <- commands.User(d.Identity)
-
-		// Handle Ctrl+C
-		c := make(chan os.Signal)
-		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-		go func() {
-			<-c
-			d.Disconnect()
-			os.Exit(0)
-		}()
 	}
 }
 
-func (d *Driver) Disconnect(reason ...string) {
-	if reason == nil {
-		reason = []string{"Bug!"}
+func (d *Driver) Disconnect() {
+	if d.conn != nil {
+		close(d.Sendq)
+		<-d.done
+
+		(*d.conn).Close()
+		d.conn = nil
 	}
-
-	d.Sendq <- commands.Quit(reason[0])
-	close(d.Sendq)
-	<-d.done
-
-	(*d.conn).Close()
-	d.conn = nil
 }
 
 func send(d *Driver) {

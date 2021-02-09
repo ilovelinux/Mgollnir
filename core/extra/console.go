@@ -5,10 +5,11 @@ import (
 	"os"
 	"strings"
 
+	"../../core"
 	"../irclib/commands"
 )
 
-func ConsoleReader(sendq chan string) {
+func ConsoleReader(server core.Server) {
 	reader := bufio.NewReader(os.Stdin)
 	channel := ""
 	for {
@@ -19,9 +20,9 @@ func ConsoleReader(sendq chan string) {
 		case '#':
 			channel = text
 		case '/':
-			sendq <- strings.TrimPrefix(text, "/")
+			server.Send(strings.TrimPrefix(text, "/"))
 		default:
-			sendq <- commands.Privmsg(channel, text)
+			server.Send(commands.Privmsg(channel, text))
 		}
 	}
 }

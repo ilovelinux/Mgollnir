@@ -4,26 +4,25 @@ import (
 	"strings"
 
 	"../../../core"
-	"../../driver"
 	"../commands"
 )
 
-func Handle(d driver.Driver, ircmsg core.IRCMsg) {
+func Handle(bot core.Bot, ircmsg core.IRCMsg) {
 	switch ircmsg.Command {
 	case "001": // RPL_WELCOME
-		for _, channel := range d.Server.Channels {
-			d.Sendq <- commands.Join(channel)
+		for _, channel := range bot.Server.Channels {
+			bot.Server.Send(commands.Join(channel))
 		}
 	case "CTCP":
-		handleCtcp(d.Sendq, ircmsg)
+		handleCtcp(bot, ircmsg)
 	case "JOIN":
-		if d.Identity.Username != ircmsg.User.Nickname {
+		if bot.Identity.Username != ircmsg.User.Nickname {
 			channel := strings.TrimPrefix(ircmsg.Parameters, ":")
-			d.Sendq <- commands.Privmsg(channel, ircmsg.User.Nickname+"!")
+			bot.Server.Send(commands.Privmsg(channel, ircmsg.User.Nickname+"!"))
 		}
 	case "PING":
-		d.Sendq <- commands.Pong(ircmsg.Parameters)
+		bot.Server.Send(commands.Pong(ircmsg.Parameters))
 	case "PRIVMSG":
-		handlePrivmsg(d.Sendq, ircmsg)
+		handlePrivmsg(bot, ircmsg)
 	}
 }

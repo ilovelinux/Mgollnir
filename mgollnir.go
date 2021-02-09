@@ -2,38 +2,55 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"./core"
-	"./core/driver"
 	"./core/extra"
 	"./core/irclib"
+	"./core/irclib/commands"
 	"./core/irclib/handler"
 )
 
-var server = core.Server{
-	Server: "irc.azzurra.org",
-	Port:   6667,
-	SSL:    false,
-	Channels: []core.Channel{
-		core.Channel{Name: "#unity", Key: ""},
+var bot = core.Bot{
+	Server: core.Server{
+		Server: "irc.azzurra.org",
+		Port:   6667,
+		SSL:    false,
+		Channels: []core.Channel{
+			core.Channel{Name: "#unity", Key: ""},
+		},
+	},
+
+	Identity: core.Identity{
+		Username:   "Mgollnir",
+		Hostname:   "*",
+		Servername: "*",
+		Realname:   "Mgollnir",
 	},
 }
 
-var identity = core.Identity{
-	Username:   "Mgollnir",
-	Hostname:   "*",
-	Servername: "*",
-	Realname:   "Mgollnir",
-}
-
 func main() {
-	d := driver.New(server, identity)
-	d.Connect()
-	go extra.ConsoleReader(d.Sendq)
+	bot.Server.Connect()
+
+	bot.Server.Send(commands.Nick(bot.Identity))
+	bot.Server.Send(commands.User(bot.Identity))
+
+	// Handle Ctrl+C
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		bot.Server.Send(commands.Quit("Bug!"))
+		os.Exit(0)
+	}()
+
+	go extra.ConsoleReader(bot.Server)
 	for {
-		line := <-d.Recvq
+		line := bot.Server.Recv()
 		fmt.Println(line)
 		ircmsg := irclib.Parser(line)
-		handler.Handle(*d, ircmsg)
+		handler.Handle(bot, ircmsg)
 	}
 }

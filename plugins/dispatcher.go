@@ -27,7 +27,7 @@ func validateCommand(cmd string) string {
 	})
 }
 
-func Dispatch(sendq chan string, privmsg core.Privmsg) {
+func Dispatch(bot core.Bot, privmsg core.Privmsg) {
 	message := privmsg.Text
 	result := ""
 	cycles := 0
@@ -82,7 +82,7 @@ func Dispatch(sendq chan string, privmsg core.Privmsg) {
 	if cycles > 0 {
 		result = fmt.Sprintf("%s (%d cycles)", result, cycles)
 		for _, line := range strings.Split(result, "\n") {
-			sendq <- commands.Privmsg(privmsg.Channel, line)
+			bot.Server.Send(commands.Privmsg(privmsg.Channel, line))
 		}
 	}
 }
